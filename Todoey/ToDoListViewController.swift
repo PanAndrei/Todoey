@@ -21,8 +21,7 @@ class ToDoListViewController: UITableViewController {
             itemArray = items
         }
         
-//        navigationController?.navigationBar.tintColor = .blue
-//        navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white]
+
         
     }
 
