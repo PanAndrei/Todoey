@@ -14,28 +14,22 @@ class ToDoListViewController: UITableViewController {
     
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
-//    print(dataFilePath)
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = DataModel()
-        newItem.title = "item1"
-        itemArray.append(newItem)
+//        let newItem = DataModel()
+//        newItem.title = "item1"
+//        itemArray.append(newItem)
+//
+//        let newItem2 = DataModel()
+//        newItem2.title = "item2"
+//        itemArray.append(newItem2)
+//
+//        let newItem3 = DataModel()
+//        newItem3.title = "item3"
+//        itemArray.append(newItem3)
         
-        let newItem2 = DataModel()
-        newItem2.title = "item2"
-        itemArray.append(newItem2)
-        
-        let newItem3 = DataModel()
-        newItem3.title = "item3"
-        itemArray.append(newItem3)
-        
-
-
-//        if let items = defaults.array(forKey: "TodoListArray") as? [DataModel] {
-//            itemArray = items
-//        }
+        loadItems()
         
     }
 
@@ -59,7 +53,7 @@ class ToDoListViewController: UITableViewController {
         
         itemArray[indexPath.row].checked = !itemArray[indexPath.row].checked
         
-        tableView.reloadData()
+        saveItems()
                 
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -77,16 +71,7 @@ class ToDoListViewController: UITableViewController {
             newItem.title = textField.text!
             
             self.itemArray.append(newItem)
-            
-            let encoder = PropertyListEncoder()
-            
-            do {
-                let data = try encoder.encode(self.itemArray)
-                try data.write(to: self.dataFilePath!)
-            } catch {
-                print("error encodind \(error)")
-            }
-            self.tableView.reloadData()
+            self.saveItems()
         }
         allert.addTextField { allertTexfield in
             allertTexfield.placeholder = "Create new Item"
@@ -94,6 +79,29 @@ class ToDoListViewController: UITableViewController {
         }
         allert.addAction(action)
         present(allert, animated: true, completion: nil)
+    }
+    
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("error encodind \(error)")
+        }
+        self.tableView.reloadData()
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([DataModel].self, from: data)
+            } catch {
+                print("erro was \(error)")
+            }
+        }
     }
     
 }
