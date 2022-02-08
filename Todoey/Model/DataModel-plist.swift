@@ -6,9 +6,9 @@
 //  Copyright © 2022 App Brewery. All rights reserved.
 //
 
-import Foundation
-
-class DataModel: Codable {
-    var title: String = ""
-    var checked: Bool = false
-}
+//import Foundation
+//
+//class DataModel: Codable {
+//    var title: String = ""
+//    var checked: Bool = false
+//}

@@ -7,15 +7,20 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController: UITableViewController {
     
-    var itemArray = [DataModel]()
-    
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
+    var itemArray = [Item]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    //plist
+//    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+
         
 //        let newItem = DataModel()
 //        newItem.title = "item1"
@@ -44,17 +49,23 @@ class ToDoListViewController: UITableViewController {
         
         let item = itemArray[indexPath.row]
         
-        cell?.accessoryType = item.checked ? .checkmark : .none
+        cell?.accessoryType = item.done ? .checkmark : .none
         
         return cell!
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        itemArray[indexPath.row].checked = !itemArray[indexPath.row].checked
+        // update
+//        itemArray[indexPath.row].setValue("Completed", forKey: "title")
+//        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+                
+        // deleting data
+        context.delete(itemArray[indexPath.row])
+        itemArray.remove(at: indexPath.row)
         
         saveItems()
-                
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
@@ -67,9 +78,10 @@ class ToDoListViewController: UITableViewController {
         let allert = UIAlertController(title: "Add new item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { action in
             
-            let newItem = DataModel()
-            newItem.title = textField.text!
             
+            let newItem = Item(context: self.context)
+            newItem.title = textField.text!
+            newItem.done = false
             self.itemArray.append(newItem)
             self.saveItems()
         }
@@ -82,27 +94,43 @@ class ToDoListViewController: UITableViewController {
     }
     
     func saveItems() {
-        let encoder = PropertyListEncoder()
+        //plist
+//        let encoder = PropertyListEncoder()
+//        do {
+//            let data = try encoder.encode(itemArray)
+//            try data.write(to: dataFilePath!)
+//        } catch {
+//            print("error encodind \(error)")
+//        }
         
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+           try context.save()
         } catch {
-            print("error encodind \(error)")
+            print("error saving context \(error)")
         }
+        
+        
         self.tableView.reloadData()
     }
     
     func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([DataModel].self, from: data)
-            } catch {
-                print("erro was \(error)")
-            }
+        //        //plist
+        //        if let data = try? Data(contentsOf: dataFilePath!) {
+        //            let decoder = PropertyListDecoder()
+        //            do {
+        //                itemArray = try decoder.decode([DataModel].self, from: data)
+        //            } catch {
+        //                print("erro was \(error)")
+        //            }
+        //        }
+        //    }
+        
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+           itemArray = try context.fetch(request)
+        } catch {
+            print("error fetching data \(error)")
         }
     }
-    
 }
 
