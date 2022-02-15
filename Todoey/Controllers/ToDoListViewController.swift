@@ -19,22 +19,11 @@ class ToDoListViewController: UITableViewController {
             loadItems()
         }
     }
-    
-    
-    //plist
-//    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("items.plist")
-    
+       
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-      
-//        searchBar.delegate = self
-        
-//                let request: NSFetchRequest<Item> = Item.fetchRequest()
-//        loadItems(with: request)
-        
-//        loadItems()
+        loadItems()
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -57,20 +46,22 @@ class ToDoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        // update
-//        toDoItems[indexPath.row].setValue("Completed", forKey: "title")
-//        toDoItems[indexPath.row].done = !toDoItems[indexPath.row].done
-        
-                
-        // deleting data
-//        context.delete(toDoItems[indexPath.row])
-//        toDoItems.remove(at: indexPath.row)
-        
-//        saveItems()
-        tableView.deselectRow(at: indexPath, animated: true)
-        
+        if let item = toDoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    // delete
+//                    realm.delete(item)
+                    // update
+                    item.done = !item.done
+                }
+            } catch {
+                print("error updatind todo data \(error)")
+            }
+            
+            tableView.reloadData()
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
     }
-    
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
@@ -84,6 +75,7 @@ class ToDoListViewController: UITableViewController {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.date = Date()
                         currentCategory.items.append(newItem)
                     }
                 } catch {
@@ -92,42 +84,14 @@ class ToDoListViewController: UITableViewController {
             }
             self.tableView.reloadData()
         }
-            
-            allert.addTextField { allertTexfield in
-                allertTexfield.placeholder = "Create new Item"
-                textField = allertTexfield
-            }
-            allert.addAction(action)
-            present(allert, animated: true, completion: nil)
+        
+        allert.addTextField { allertTexfield in
+            allertTexfield.placeholder = "Create new Item"
+            textField = allertTexfield
         }
-        
-        //    func saveItems(item: Item) {
-        //plist
-//        let encoder = PropertyListEncoder()
-//        do {
-//            let data = try encoder.encode(toDoItems)
-//            try data.write(to: dataFilePath!)
-//        } catch {
-//            print("error encodind \(error)")
-//        }
-//
-//        do {
-//           try context.save()
-//        } catch {
-//            print("error saving context \(error)")
-//        }
-        
-//        do {
-//            try realm.write {
-//                realm.add(item)
-//            }
-//        } catch {
-//            print("error saving item \(error)")
-//        }
-//
-//
-//        self.tableView.reloadData()
-//    }
+        allert.addAction(action)
+        present(allert, animated: true, completion: nil)
+    }
     
     func loadItems() {
 
@@ -135,32 +99,24 @@ class ToDoListViewController: UITableViewController {
         
         tableView.reloadData()
     }
-    
-    
-    
 }
-
 // MARK: - search bar methods
 
-//extension ToDoListViewController: UISearchBarDelegate {
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//
-//        loadItems(with: request, predicate: predicate)
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        if searchBar.text?.count == 0 {
-//            loadItems()
-//            DispatchQueue.main.async {
-//                searchBar.resignFirstResponder()
-//            }
-//        }
-//    }
-//
-//}
+extension ToDoListViewController: UISearchBarDelegate {
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        toDoItems = toDoItems?.filter("title CONTAINS %@", searchBar.text!).sorted(byKeyPath: "date", ascending: true)
+        
+        tableView.reloadData()
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}
